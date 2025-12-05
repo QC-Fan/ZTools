@@ -292,8 +292,8 @@ class WindowManager {
    */
   public hideWindow(_restoreFocus: boolean = true): void {
     console.log('隐藏窗口', _restoreFocus)
-    // TODO: 实现焦点恢复功能
     this.mainWindow?.hide()
+    this.restorePreviousWindow()
   }
 
   /**
