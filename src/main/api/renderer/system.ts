@@ -43,6 +43,9 @@ export class SystemAPI {
     // App Info
     ipcMain.handle('get-app-version', () => app.getVersion())
     ipcMain.handle('get-system-versions', () => process.versions)
+    ipcMain.on('get-platform', (event) => {
+      event.returnValue = process.platform
+    })
   }
 
   private async openExternal(url: string): Promise<void> {
@@ -139,7 +142,7 @@ export class SystemAPI {
    * macOS: 在 Finder 中显示并选中文件
    * Windows: 在资源管理器中显示并选中文件
    * Linux: 在文件管理器中显示并选中文件
-   * 
+   *
    * Electron 的 shell.showItemInFolder() 是跨平台的 API，
    * 会自动根据操作系统选择相应的文件管理器
    */
@@ -153,7 +156,8 @@ export class SystemAPI {
       // 在 macOS 上会自动使用 Finder，Windows 上使用资源管理器，Linux 上使用文件管理器
       shell.showItemInFolder(filePath)
     } catch (error: any) {
-      const platformName = process.platform === 'darwin' ? 'macOS' : process.platform === 'win32' ? 'Windows' : 'Linux'
+      const platformName =
+        process.platform === 'darwin' ? 'macOS' : process.platform === 'win32' ? 'Windows' : 'Linux'
       console.error(`在${platformName}文件管理器中显示文件失败:`, error)
       throw error
     }

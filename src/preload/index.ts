@@ -149,9 +149,7 @@ contextBridge.exposeInMainWorld('ztools', {
     installDownloadedUpdate: () => ipcRenderer.invoke('updater:install-downloaded-update'),
     getDownloadStatus: () => ipcRenderer.invoke('updater:get-download-status')
   },
-  onUpdateDownloaded: (
-    callback: (data: { version: string; changelog: string[] }) => void
-  ) => {
+  onUpdateDownloaded: (callback: (data: { version: string; changelog: string[] }) => void) => {
     ipcRenderer.on('update-downloaded', (_event, data) => callback(data))
   },
   onUpdateDownloadStart: (callback: (data: { version: string }) => void) => {
@@ -163,7 +161,9 @@ contextBridge.exposeInMainWorld('ztools', {
   // 获取应用版本
   getAppVersion: () => ipcRenderer.invoke('get-app-version'),
   // 获取环境版本信息 (Electron, Node, Chrome等)
-  getSystemVersions: () => ipcRenderer.invoke('get-system-versions')
+  getSystemVersions: () => ipcRenderer.invoke('get-system-versions'),
+  // 获取系统平台 (darwin, win32, linux)
+  getPlatform: () => ipcRenderer.sendSync('get-platform')
 })
 
 // TypeScript 类型定义

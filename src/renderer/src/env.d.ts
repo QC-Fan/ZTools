@@ -172,6 +172,7 @@ declare global {
       onUpdateDownloadFailed: (callback: (data: { error: string }) => void) => void
       getAppVersion: () => Promise<string>
       getSystemVersions: () => Promise<NodeJS.ProcessVersions>
+      getPlatform: () => string
     }
   }
 }

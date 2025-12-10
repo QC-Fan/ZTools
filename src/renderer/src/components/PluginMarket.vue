@@ -34,7 +34,12 @@
                 <span v-if="installingPlugin === plugin.name">...</span>
                 <span v-else>升级</span>
               </button>
-              <button v-else class="icon-btn open-btn" title="打开" @click.stop="handleOpenPlugin(plugin)">
+              <button
+                v-else
+                class="icon-btn open-btn"
+                title="打开"
+                @click.stop="handleOpenPlugin(plugin)"
+              >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="14"
@@ -135,6 +140,8 @@ const selectedPlugin = ref<any | null>(null)
 async function fetchPlugins(): Promise<void> {
   isLoading.value = true
   try {
+    // 获取当前平台（同步调用）
+    const currentPlatform = window.ztools.getPlatform()
     // 并行获取市场列表和已安装插件列表
     const [marketResult, installedPlugins] = await Promise.all([
       window.ztools.fetchPluginMarket(),
@@ -144,16 +151,25 @@ async function fetchPlugins(): Promise<void> {
     if (marketResult.success && marketResult.data) {
       const marketPlugins = marketResult.data
 
-      // 标记已安装的插件
-      plugins.value = marketPlugins.map((p: any) => {
-        const installedPlugin = installedPlugins.find((ip: any) => ip.name === p.name)
-        return {
-          ...p,
-          installed: !!installedPlugin,
-          path: installedPlugin ? installedPlugin.path : undefined,
-          localVersion: installedPlugin ? installedPlugin.version : undefined
-        }
-      })
+      // 先过滤掉不适配当前平台的插件，然后标记已安装的插件
+      plugins.value = marketPlugins
+        .filter((p: any) => {
+          // 如果插件没有 platform 字段，默认支持所有平台
+          if (!p.platform || !Array.isArray(p.platform)) {
+            return true
+          }
+          // 检查插件的 platform 数组是否包含当前平台
+          return p.platform.includes(currentPlatform)
+        })
+        .map((p: any) => {
+          const installedPlugin = installedPlugins.find((ip: any) => ip.name === p.name)
+          return {
+            ...p,
+            installed: !!installedPlugin,
+            path: installedPlugin ? installedPlugin.path : undefined,
+            localVersion: installedPlugin ? installedPlugin.version : undefined
+          }
+        })
     } else {
       console.error('获取插件市场列表失败:', marketResult.error)
     }
