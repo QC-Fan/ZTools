@@ -161,6 +161,12 @@ class PluginManager {
           exitCode: details.exitCode
         })
 
+        // 发送插件退出事件（isKill=true 表示进程结束）
+        // 注意：此时 webContents 可能已经销毁，需要先检查
+        if (!this.pluginView?.webContents.isDestroyed()) {
+          this.pluginView?.webContents.send('plugin-out', true)
+        }
+
         // 从缓存中移除该插件
         const index = this.pluginViews.findIndex((v) => v.path === pluginPath)
         if (index !== -1) {
@@ -309,6 +315,11 @@ class PluginManager {
 
       const { view } = this.pluginViews[index]
 
+      // 发送插件退出事件（isKill=true 表示进程结束）
+      if (!view.webContents.isDestroyed()) {
+        view.webContents.send('plugin-out', true)
+      }
+
       // 如果是当前显示的插件，先隐藏
       if (this.currentPluginPath === pluginPath && this.mainWindow) {
         this.mainWindow.contentView.removeChildView(view)
@@ -339,6 +350,10 @@ class PluginManager {
   public killAllPlugins(): void {
     for (const { view, path } of this.pluginViews) {
       try {
+        // 发送插件退出事件（isKill=true 表示进程结束）
+        if (!view.webContents.isDestroyed()) {
+          view.webContents.send('plugin-out', true)
+        }
         if (!view.webContents.isDestroyed()) {
           view.webContents.close()
         }

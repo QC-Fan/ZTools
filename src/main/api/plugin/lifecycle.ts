@@ -34,6 +34,9 @@ export class PluginLifecycleAPI {
         return false
       }
 
+      // 发送插件退出事件（isKill=false 表示正常退出）
+      event.sender.send('plugin-out', false)
+
       this.pluginManager.hidePluginView()
       this.mainWindow?.webContents.send('back-to-search')
 

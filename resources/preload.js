@@ -11,6 +11,7 @@ if (!electron.ipcRenderer.sendTo) {
 const enterCallbacks = []
 const clipboardChangeCallbacks = []
 const subInputChangeCallbacks = []
+const pluginOutCallbacks = []
 
 // 获取操作系统类型
 const osType = electron.ipcRenderer.sendSync('get-os-type')
@@ -27,6 +28,13 @@ window.ztools = {
   onPluginEnter: async (callback) => {
     console.log('插件请求onPluginEnter')
     enterCallbacks.push(callback)
+  },
+  // 插件退出事件
+  onPluginOut: async (callback) => {
+    console.log('插件请求onPluginOut')
+    if (callback && typeof callback === 'function') {
+      pluginOutCallbacks.push(callback)
+    }
   },
   // 兼容旧api
   onPluginReady: async (callback) => {
@@ -266,6 +274,12 @@ window.ztools = {
 electron.ipcRenderer.on('on-plugin-enter', (event, launchParam) => {
   console.log('插件进入参数:', launchParam)
   enterCallbacks.forEach((cb) => cb(launchParam))
+})
+
+// 监听插件退出事件
+electron.ipcRenderer.on('plugin-out', (event, isKill) => {
+  console.log('插件退出事件:', isKill)
+  pluginOutCallbacks.forEach((cb) => cb(isKill))
 })
 
 electron.ipcRenderer.on('clipboard-change', (event, item) => {
