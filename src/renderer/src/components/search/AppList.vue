@@ -224,10 +224,9 @@ defineExpose({
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 5px;
+  padding: 8px 4px; /* 上下8px，左右4px */
   border-radius: 8px;
   cursor: pointer;
-  transition: background 0.15s;
   width: 100%; /* 占满格子宽度 */
   overflow: hidden;
   user-select: none; /* 禁止文本选择 */
@@ -264,37 +263,37 @@ defineExpose({
 }
 
 .app-icon {
-  width: 40px;
-  height: 40px;
-  margin-bottom: 8px;
-  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  margin-bottom: 4px;
+  border-radius: 6px;
   flex-shrink: 0;
 }
 
 /* 自适应图标样式由全局 CSS 处理（style.css） */
 
 .app-icon-emoji {
-  width: 40px;
-  height: 40px;
-  margin-bottom: 8px;
+  width: 32px;
+  height: 32px;
+  margin-bottom: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 28px;
+  font-size: 20px;
   flex-shrink: 0;
 }
 
 .app-icon-placeholder {
-  width: 40px;
-  height: 40px;
-  margin-bottom: 8px;
-  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  margin-bottom: 4px;
+  border-radius: 6px;
   background: var(--primary-gradient);
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--text-on-primary);
-  font-size: 18px;
+  font-size: 14px;
   font-weight: bold;
   flex-shrink: 0;
 }
@@ -302,10 +301,12 @@ defineExpose({
 .app-name {
   font-size: 12px;
   font-weight: 500; /* 增加字体粗细，提高可读性 */
+  line-height: 16px; /* 固定行高 */
   color: var(--text-color);
   text-align: center;
   width: 100%; /* 占满父容器宽度 */
   padding: 0 4px; /* 左右留一点边距 */
+  height: 32px; /* 固定高度：16px * 2 = 32px（两行文本） */
 
   /* 多行文本省略 */
   display: -webkit-box;
