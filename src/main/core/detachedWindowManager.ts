@@ -74,7 +74,7 @@ class DetachedWindowManager {
       const titlebarUrl =
         process.env.NODE_ENV === 'development'
           ? 'http://localhost:5174/detached-titlebar.html'
-          : `file://${path.join(__dirname, '../../renderer/detached-titlebar.html')}`
+          : `file://${path.join(__dirname, '../../out/renderer/detached-titlebar.html')}`
 
       win.loadURL(titlebarUrl)
 
