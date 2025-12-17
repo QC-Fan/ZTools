@@ -133,14 +133,67 @@
           <div v-else-if="dataError" class="error-container">
             <span>{{ dataError }}</span>
           </div>
-          <div v-else-if="pluginData && pluginData.length > 0" class="data-list">
+          <div v-else-if="docKeys && docKeys.length > 0" class="data-list">
             <div
-              v-for="item in pluginData"
-              :key="item.id"
+              v-for="item in docKeys"
+              :key="item.key"
               class="card data-item"
-              @click="viewDataDetail(item)"
+              :class="{ expanded: expandedDataId === item.key }"
+              @click="toggleDataDetail(item)"
             >
-              <span class="data-key">{{ item.id }}</span>
+              <div class="data-header">
+                <span class="data-key">{{ item.key }}</span>
+                <div class="data-header-right">
+                  <span class="doc-type-badge" :class="`type-${item.type}`">
+                    {{ item.type === 'document' ? '文档' : '附件' }}
+                  </span>
+                  <svg
+                    class="expand-icon"
+                    :class="{ rotated: expandedDataId === item.key }"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M9 18L15 12L9 6"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </div>
+              </div>
+              <Transition name="expand">
+                <div v-if="expandedDataId === item.key" class="data-content">
+                  <div class="data-meta">
+                    <div class="data-meta-item">
+                      <span class="label">类型:</span>
+                      <span class="value type-badge" :class="`type-${currentDocType}`">
+                        {{ currentDocType === 'document' ? '文档' : '附件' }}
+                      </span>
+                    </div>
+                    <div v-if="currentDocContent?._rev" class="data-meta-item">
+                      <span class="label">版本:</span>
+                      <span class="value">{{ currentDocContent._rev }}</span>
+                    </div>
+                    <div
+                      v-if="currentDocContent?._updatedAt || currentDocContent?.updatedAt"
+                      class="data-meta-item"
+                    >
+                      <span class="label">更新时间:</span>
+                      <span class="value">{{
+                        formatDate(currentDocContent._updatedAt || currentDocContent.updatedAt)
+                      }}</span>
+                    </div>
+                  </div>
+                  <div class="data-json">
+                    <pre>{{ formatJsonData(currentDocContent) }}</pre>
+                  </div>
+                </div>
+              </Transition>
             </div>
           </div>
           <div v-else class="empty-message">该插件暂无存储数据</div>
@@ -176,11 +229,9 @@ interface PluginItem {
   path?: string
 }
 
-interface PluginDataItem {
-  id: string
-  data: any
-  rev?: string
-  updatedAt?: string
+interface DocItem {
+  key: string
+  type: 'document' | 'attachment'
 }
 
 const props = defineProps<{
@@ -205,9 +256,12 @@ const readmeLoading = ref(false)
 const readmeError = ref<string>('')
 
 // 插件数据状态
-const pluginData = ref<PluginDataItem[]>([])
+const docKeys = ref<DocItem[]>([])
 const dataLoading = ref(false)
 const dataError = ref<string>('')
+const expandedDataId = ref<string>('')
+const currentDocContent = ref<any>(null)
+const currentDocType = ref<'document' | 'attachment'>('document')
 
 // 配置 marked
 marked.setOptions({
@@ -240,7 +294,7 @@ function switchTab(tabId: TabId): void {
   activeTab.value = tabId
 
   // 切换到数据 Tab 时加载数据
-  if (tabId === 'data' && !pluginData.value.length && !dataLoading.value) {
+  if (tabId === 'data' && !docKeys.value.length && !dataLoading.value) {
     loadPluginData()
   }
 }
@@ -270,7 +324,7 @@ async function loadReadme(): Promise<void> {
   }
 }
 
-// 加载插件数据
+// 加载插件数据（文档和附件列表）
 async function loadPluginData(): Promise<void> {
   if (!props.plugin.name) {
     dataError.value = '插件名称不存在'
@@ -281,9 +335,9 @@ async function loadPluginData(): Promise<void> {
   dataError.value = ''
 
   try {
-    const result = await window.ztools.getPluginDbData(props.plugin.name)
+    const result = await window.ztools.getPluginDocKeys(props.plugin.name)
     if (result.success) {
-      pluginData.value = result.data || []
+      docKeys.value = result.data || []
     } else {
       dataError.value = result.error || '获取失败'
     }
@@ -342,9 +396,59 @@ function normalizeCommand(cmd: any): any {
   }
 }
 
-// 查看数据详情
-function viewDataDetail(item: PluginDataItem): void {
-  alert(`数据 ID: ${item.id}\n\n${JSON.stringify(item.data, null, 2)}`)
+// 切换数据详情展开状态
+async function toggleDataDetail(item: DocItem): Promise<void> {
+  // 如果点击的是已展开的项，则收起
+  if (expandedDataId.value === item.key) {
+    expandedDataId.value = ''
+    currentDocContent.value = null
+    return
+  }
+
+  // 展开新项，加载数据
+  expandedDataId.value = item.key
+  currentDocType.value = item.type
+
+  try {
+    const result = await window.ztools.getPluginDoc(props.plugin.name, item.key)
+    if (result.success) {
+      currentDocContent.value = result.data
+      currentDocType.value = result.type || 'document'
+    } else {
+      currentDocContent.value = { error: result.error || '加载失败' }
+    }
+  } catch (error) {
+    console.error('加载文档内容失败:', error)
+    currentDocContent.value = { error: '加载失败' }
+  }
+}
+
+// 格式化 JSON 数据
+function formatJsonData(data: any): string {
+  if (!data) return ''
+  try {
+    return JSON.stringify(data, null, 2)
+  } catch {
+    return String(data)
+  }
+}
+
+// 格式化日期
+function formatDate(dateStr?: string): string {
+  if (!dateStr) return ''
+  try {
+    const date = new Date(dateStr)
+    return date.toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    })
+  } catch {
+    return dateStr
+  }
 }
 
 // 组件挂载时加载 README
@@ -658,11 +762,30 @@ onMounted(() => {
 .data-item {
   cursor: pointer;
   transition: all 0.2s;
+  overflow: hidden;
 }
 
 .data-item:hover {
   background: var(--hover-bg);
-  transform: translateX(2px);
+}
+
+.data-item.expanded {
+  background: var(--active-bg);
+}
+
+.data-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  gap: 8px;
+}
+
+.data-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .data-key {
@@ -670,5 +793,122 @@ onMounted(() => {
   font-weight: 500;
   color: var(--text-color);
   font-family: monospace;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.expand-icon {
+  flex-shrink: 0;
+  color: var(--text-secondary);
+  transition: transform 0.2s;
+}
+
+.expand-icon.rotated {
+  transform: rotate(90deg);
+}
+
+.data-content {
+  padding: 0 14px 14px;
+  border-top: 1px solid var(--divider-color);
+}
+
+.data-meta {
+  display: flex;
+  gap: 16px;
+  margin-top: 12px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.data-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.data-meta-item .label {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.data-meta-item .value {
+  color: var(--text-color);
+  font-family: monospace;
+}
+
+.data-meta-item .value.type-badge {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
+}
+
+.data-meta-item .value.type-badge.type-document {
+  background: var(--primary-light-bg);
+  color: var(--primary-color);
+}
+
+.data-meta-item .value.type-badge.type-attachment {
+  background: var(--purple-light-bg);
+  color: var(--purple-color);
+}
+
+.doc-type-badge {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.doc-type-badge.type-document {
+  background: var(--primary-light-bg);
+  color: var(--primary-color);
+}
+
+.doc-type-badge.type-attachment {
+  background: var(--purple-light-bg);
+  color: var(--purple-color);
+}
+
+.data-json {
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 12px;
+  overflow-x: auto;
+}
+
+.data-json pre {
+  margin: 0;
+  font-family: 'Monaco', 'Menlo', monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-color);
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* 展开/收起动画 */
+.expand-enter-active,
+.expand-leave-active {
+  transition:
+    max-height 0.3s ease,
+    opacity 0.2s ease;
+  max-height: 500px;
+  overflow: hidden;
+}
+
+.expand-enter-from,
+.expand-leave-to {
+  max-height: 0;
+  opacity: 0;
 }
 </style>

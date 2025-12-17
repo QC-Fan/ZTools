@@ -669,7 +669,7 @@ export class PluginsAPI {
       }
 
       // 所有文件名都不存在
-      return { success: false, error: '未找到 README.md 文件' }
+      return { success: false, error: '暂无详情' }
     } catch (error: unknown) {
       console.error('读取插件 README 失败:', error)
       return { success: false, error: error instanceof Error ? error.message : '读取失败' }
