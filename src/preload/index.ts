@@ -44,6 +44,10 @@ const api = {
   fetchPluginMarket: () => ipcRenderer.invoke('fetch-plugin-market'),
   installPluginFromMarket: (plugin: any) =>
     ipcRenderer.invoke('install-plugin-from-market', plugin),
+  getPluginReadme: (pluginPath: string): Promise<any> =>
+    ipcRenderer.invoke('get-plugin-readme', pluginPath),
+  getPluginDbData: (pluginName: string): Promise<any> =>
+    ipcRenderer.invoke('get-plugin-db-data', pluginName),
   deletePlugin: (pluginPath: string) => ipcRenderer.invoke('delete-plugin', pluginPath),
   reloadPlugin: (pluginPath: string) => ipcRenderer.invoke('reload-plugin', pluginPath),
   getRunningPlugins: () => ipcRenderer.invoke('get-running-plugins'),
@@ -186,11 +190,13 @@ contextBridge.exposeInMainWorld('ztools', api)
 // 为标题栏暴露 electron API
 contextBridge.exposeInMainWorld('electron', {
   ipcRenderer: {
-    send: (channel: string, ...args: any[]) => ipcRenderer.send(channel, ...args),
+    send: (channel: string, ...args: any[]): void => ipcRenderer.send(channel, ...args),
     on: (channel: string, callback: (...args: any[]) => void): (() => void) => {
-      const subscription = (_event: any, ...args: any[]) => callback(...args)
+      const subscription = (_event: any, ...args: any[]): void => callback(...args)
       ipcRenderer.on(channel, subscription)
-      return () => ipcRenderer.removeListener(channel, subscription)
+      return (): void => {
+        ipcRenderer.removeListener(channel, subscription)
+      }
     }
   }
 })
