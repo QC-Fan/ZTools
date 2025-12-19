@@ -67,6 +67,7 @@
     "electron-vite": "^4.0.1",
     "eslint": "^9.36.0",
     "eslint-plugin-vue": "^10.4.0",
+    "node-gyp": "^12.1.0",
     "prettier": "^3.6.2",
     "typescript": "^5.9.2",
     "vite": "^7.1.6",
@@ -77,7 +78,10 @@
   "pnpm": {
     "onlyBuiltDependencies": [
       "electron",
-      "esbuild"
+      "esbuild",
+      "extract-file-icon",
+      "lmdb",
+      "msgpackr-extract"
     ]
   }
 }
