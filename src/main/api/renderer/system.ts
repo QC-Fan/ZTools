@@ -172,22 +172,31 @@ export class SystemAPI {
   private async showContextMenu(menuItems: any): Promise<void> {
     if (!this.mainWindow) return
 
-    const template = menuItems.map((item: any) => {
-      const menuItem: any = {
-        label: item.label,
-        click: () => {
-          this.mainWindow?.webContents.send('context-menu-command', item.id)
+    const buildTemplate = (items: any[]): any[] => {
+      return items.map((item: any) => {
+        const menuItem: any = {
+          label: item.label
         }
-      }
 
-      // 支持 checkbox 类型的菜单项
-      if (item.type === 'checkbox') {
-        menuItem.type = 'checkbox'
-        menuItem.checked = item.checked || false
-      }
+        if (item.submenu) {
+          menuItem.submenu = buildTemplate(item.submenu)
+        } else {
+          menuItem.click = () => {
+            this.mainWindow?.webContents.send('context-menu-command', item.id)
+          }
+        }
 
-      return menuItem
-    })
+        // 支持 checkbox 类型的菜单项
+        if (item.type === 'checkbox') {
+          menuItem.type = 'checkbox'
+          menuItem.checked = item.checked || false
+        }
+
+        return menuItem
+      })
+    }
+
+    const template = buildTemplate(menuItems)
 
     const menu = Menu.buildFromTemplate(template)
     menu.popup({ window: this.mainWindow })

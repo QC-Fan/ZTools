@@ -724,13 +724,18 @@ async function handleSettingsClick(): Promise<void> {
     const menuItems = [
       { id: 'detach-plugin', label: '分离到独立窗口 (⌘+D)' },
       { id: 'open-devtools', label: '打开开发者工具' },
-      { id: 'kill-plugin', label: '结束运行' },
       {
-        id: 'toggle-auto-kill',
-        label: '退出到后台立即结束运行',
-        type: 'checkbox',
-        checked: isAutoKill
-      }
+        label: '插件设置',
+        submenu: [
+          {
+            id: 'toggle-auto-kill',
+            label: '退出到后台立即结束运行',
+            type: 'checkbox',
+            checked: isAutoKill
+          }
+        ]
+      },
+      { id: 'kill-plugin', label: '结束运行' }
     ]
 
     await window.ztools.showContextMenu(menuItems)
