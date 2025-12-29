@@ -3,6 +3,7 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import { v4 as uuidv4 } from 'uuid'
 import databaseAPI from '../api/shared/database'
+import { applyWindowMaterial } from '../utils/windowUtils'
 import { GLOBAL_SCROLLBAR_CSS } from './globalStyles.js'
 import lmdbInstance from './lmdb/lmdbInstance'
 
@@ -43,46 +44,10 @@ class DetachedWindowManager {
       const material = (settings?.data?.windowMaterial as 'mica' | 'acrylic' | 'none') || 'mica'
 
       console.log('分离窗口应用材质:', material)
-
-      switch (material) {
-        case 'mica':
-          try {
-            win.setBackgroundMaterial('mica')
-            console.log('✅ 分离窗口 Mica 材质已启用')
-          } catch (error) {
-            console.error('❌ 设置 Mica 失败:', error)
-            win.setBackgroundColor('#f4f4f4')
-          }
-          break
-        case 'acrylic':
-          try {
-            win.setBackgroundMaterial('acrylic')
-            console.log('✅ 分离窗口 Acrylic 材质已启用')
-          } catch (error) {
-            console.error('❌ 设置 Acrylic 失败:', error)
-            win.setBackgroundColor('#f4f4f4')
-          }
-          break
-        case 'none':
-        default:
-          try {
-            win.setBackgroundMaterial('none')
-            win.setBackgroundColor('#f4f4f4')
-            console.log('✅ 分离窗口已禁用窗口材质')
-          } catch (error) {
-            console.error('❌ 设置背景失败:', error)
-          }
-          break
-      }
+      applyWindowMaterial(win, material)
     } catch (error) {
       console.error('读取窗口材质配置失败，使用默认值 (mica):', error)
-      try {
-        win.setBackgroundMaterial('mica')
-        console.log('✅ 分离窗口 Mica 材质已启用（默认）')
-      } catch (err) {
-        console.error('❌ 设置背景材质失败:', err)
-        win.setBackgroundColor('#f4f4f4')
-      }
+      applyWindowMaterial(win, 'mica')
     }
   }
 
@@ -172,7 +137,7 @@ class DetachedWindowManager {
       // 创建窗口（macOS 和 Windows 都使用无边框，macOS 保留交通灯）
       const isMac = process.platform === 'darwin'
       const isWindows = process.platform === 'win32'
-      
+
       const windowConfig: Electron.BrowserWindowConstructorOptions = {
         width: options.width,
         height: options.height + DETACHED_TITLEBAR_HEIGHT,
@@ -508,6 +473,24 @@ class DetachedWindowManager {
         app.dock?.show()
       } else {
         app.dock?.hide()
+      }
+    }
+  }
+
+  /**
+   * 更新所有分离窗口的材质
+   */
+  public async updateAllWindowsMaterial(material: 'mica' | 'acrylic' | 'none'): Promise<void> {
+    for (const [windowId, info] of this.detachedWindowMap.entries()) {
+      try {
+        // 更新主进程窗口材质
+        applyWindowMaterial(info.window, material)
+        console.log(`✅ 分离窗口 ${windowId} 材质已更新为 ${material}`)
+
+        // 通知渲染进程更新样式
+        info.window.webContents.send('update-window-material', material)
+      } catch (error) {
+        console.error(`❌ 更新分离窗口 ${windowId} 材质失败:`, error)
       }
     }
   }

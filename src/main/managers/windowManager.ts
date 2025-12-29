@@ -19,6 +19,8 @@ import lmdbInstance from '../core/lmdb/lmdbInstance'
 import clipboardManager from './clipboardManager'
 
 import { MAX_WINDOW_HEIGHT, WINDOW_INITIAL_HEIGHT, WINDOW_WIDTH } from '../common/constants'
+import detachedWindowManager from '../core/detachedWindowManager'
+import { applyWindowMaterial } from '../utils/windowUtils'
 import pluginManager from './pluginManager'
 
 // 窗口材质类型
@@ -109,7 +111,7 @@ class WindowManager {
     }
     // Windows 系统配置（不设置 transparent，让 setBackgroundMaterial 生效）
     else if (platform.isWindows) {
-      windowConfig.backgroundColor = '#00000000' // 完全透明，让 Acrylic 显示
+      windowConfig.backgroundColor = '#00000000'
     }
 
     this.mainWindow = new BrowserWindow(windowConfig)
@@ -570,10 +572,22 @@ class WindowManager {
   }
 
   /**
-   * 广播窗口材质到所有渲染进程
+   * 广播窗口材质到所有渲染进程（包括分离窗口和插件）
    */
   private broadcastWindowMaterial(material: WindowMaterial): void {
+    // 发送给主窗口
     this.mainWindow?.webContents.send('update-window-material', material)
+
+    // 发送给所有缓存的插件视图
+    const allPluginViews = pluginManager.getAllPluginViews()
+    for (const pluginViewInfo of allPluginViews) {
+      if (!pluginViewInfo.view.webContents.isDestroyed()) {
+        pluginViewInfo.view.webContents.send('update-window-material', material)
+      }
+    }
+
+    // 发送给所有分离窗口
+    detachedWindowManager.updateAllWindowsMaterial(material)
   }
 
   /**
@@ -581,37 +595,7 @@ class WindowManager {
    */
   private applyMaterial(material: WindowMaterial): void {
     if (!this.mainWindow) return
-
-    switch (material) {
-      case 'mica':
-        try {
-          this.mainWindow.setBackgroundMaterial('mica')
-          console.log('✅ Mica 材质已启用')
-        } catch (error) {
-          console.error('❌ 设置 Mica 失败:', error)
-          this.mainWindow.setBackgroundColor('#f4f4f4')
-        }
-        break
-      case 'acrylic':
-        try {
-          this.mainWindow.setBackgroundMaterial('acrylic')
-          console.log('✅ Acrylic 材质已启用')
-        } catch (error) {
-          console.error('❌ 设置 Acrylic 失败:', error)
-          this.mainWindow.setBackgroundColor('#f4f4f4')
-        }
-        break
-      case 'none':
-      default:
-        try {
-          this.mainWindow.setBackgroundMaterial('none')
-          this.mainWindow.setBackgroundColor('#f4f4f4')
-          console.log('✅ 已禁用窗口材质')
-        } catch (error) {
-          console.error('❌ 设置背景失败:', error)
-        }
-        break
-    }
+    applyWindowMaterial(this.mainWindow, material)
   }
 
   /**

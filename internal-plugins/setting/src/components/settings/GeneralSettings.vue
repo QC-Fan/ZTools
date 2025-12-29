@@ -62,11 +62,7 @@
         <span class="setting-desc">选择应用的主题外观</span>
       </div>
       <div class="setting-control">
-        <select v-model="theme" class="select" @change="handleThemeChange">
-          <option value="system">跟随系统</option>
-          <option value="light">明亮</option>
-          <option value="dark">暗黑</option>
-        </select>
+        <Dropdown v-model="theme" :options="themeOptions" @change="handleThemeChange" />
       </div>
     </div>
 
@@ -113,11 +109,11 @@
         <span class="setting-desc">选择窗口背景材质效果（需要 Windows 11）</span>
       </div>
       <div class="setting-control">
-        <select v-model="windowMaterial" class="select" @change="handleWindowMaterialChange">
-          <option value="mica">Mica（云母）</option>
-          <option value="acrylic">Acrylic（亚克力）</option>
-          <option value="none">无</option>
-        </select>
+        <Dropdown
+          v-model="windowMaterial"
+          :options="windowMaterialOptions"
+          @change="handleWindowMaterialChange"
+        />
       </div>
     </div>
 
@@ -208,13 +204,7 @@
         <span class="setting-desc">复制文本后在设定时间内打开窗口自动粘贴</span>
       </div>
       <div class="setting-control">
-        <select v-model="autoPaste" class="select" @change="handleAutoPasteChange">
-          <option value="off">关闭</option>
-          <option value="1s">1秒内</option>
-          <option value="3s">3秒内</option>
-          <option value="5s">5秒内</option>
-          <option value="10s">10秒内</option>
-        </select>
+        <Dropdown v-model="autoPaste" :options="autoPasteOptions" @change="handleAutoPasteChange" />
       </div>
     </div>
 
@@ -225,15 +215,7 @@
         <span class="setting-desc">窗口显示状态切换后自动清空搜索框内容的时间</span>
       </div>
       <div class="setting-control">
-        <select v-model="autoClear" class="select" @change="handleAutoClearChange">
-          <option value="immediately">立即</option>
-          <option value="1m">1分钟</option>
-          <option value="2m">2分钟</option>
-          <option value="3m">3分钟</option>
-          <option value="5m">5分钟</option>
-          <option value="10m">10分钟</option>
-          <option value="never">从不</option>
-        </select>
+        <Dropdown v-model="autoClear" :options="autoClearOptions" @change="handleAutoClearChange" />
       </div>
     </div>
 
@@ -296,8 +278,40 @@ import {
   type PrimaryColor,
   type ThemeType
 } from '../../constants'
+import Dropdown from '../common/Dropdown.vue'
 
-const { success, error, warning, info, confirm } = useToast()
+const { error, info, confirm } = useToast()
+
+// Dropdown 选项数据
+const themeOptions = [
+  { label: '跟随系统', value: 'system' },
+  { label: '明亮', value: 'light' },
+  { label: '暗黑', value: 'dark' }
+]
+
+const windowMaterialOptions = [
+  { label: 'Mica（云母）', value: 'mica' },
+  { label: 'Acrylic（亚克力）', value: 'acrylic' },
+  { label: '无', value: 'none' }
+]
+
+const autoPasteOptions = [
+  { label: '关闭', value: 'off' },
+  { label: '1秒内', value: '1s' },
+  { label: '3秒内', value: '3s' },
+  { label: '5秒内', value: '5s' },
+  { label: '10秒内', value: '10s' }
+]
+
+const autoClearOptions = [
+  { label: '立即', value: 'immediately' },
+  { label: '1分钟', value: '1m' },
+  { label: '2分钟', value: '2m' },
+  { label: '3分钟', value: '3m' },
+  { label: '5分钟', value: '5m' },
+  { label: '10分钟', value: '10m' },
+  { label: '从不', value: 'never' }
+]
 
 // 当前平台（与 window.ztools.getPlatform 返回类型保持一致）
 const platform = ref<'darwin' | 'win32' | 'linux'>('darwin')
@@ -1185,11 +1199,6 @@ async function handleHotkeyRecorded(newHotkey: string): Promise<void> {
 /* 文本输入框 */
 .input {
   min-width: 250px;
-  padding: 8px 12px;
-}
-
-.select {
-  min-width: 150px;
   padding: 8px 12px;
 }
 

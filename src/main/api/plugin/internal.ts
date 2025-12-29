@@ -243,12 +243,15 @@ export class InternalPluginAPI {
       return await (windowAPI as any).setTrayIconVisible(visible)
     })
 
-    ipcMain.handle('internal:set-window-material', async (event, material: 'mica' | 'acrylic' | 'none') => {
-      if (!requireInternalPlugin(this.pluginManager, event)) {
-        throw new PermissionDeniedError('internal:set-window-material')
+    ipcMain.handle(
+      'internal:set-window-material',
+      async (event, material: 'mica' | 'acrylic' | 'none') => {
+        if (!requireInternalPlugin(this.pluginManager, event)) {
+          throw new PermissionDeniedError('internal:set-window-material')
+        }
+        return await (windowAPI as any).setWindowMaterial(material)
       }
-      return await (windowAPI as any).setWindowMaterial(material)
-    })
+    )
 
     ipcMain.handle('internal:get-window-material', async (event) => {
       if (!requireInternalPlugin(this.pluginManager, event)) {
