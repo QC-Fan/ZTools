@@ -3,6 +3,7 @@ import { promises as fs } from 'fs'
 import path from 'path'
 import clipboardManager from '../../managers/clipboardManager'
 import appleScriptHelper from '../../utils/appleScriptHelper'
+import { isWindows11 } from '../../utils/windowUtils'
 
 // 头像目录
 const AVATAR_DIR = path.join(app.getPath('userData'), 'avatar')
@@ -48,6 +49,7 @@ export class SystemAPI {
     ipcMain.on('get-platform', (event) => {
       event.returnValue = process.platform
     })
+    ipcMain.handle('is-windows11', () => isWindows11())
   }
 
   private async openExternal(url: string): Promise<void> {

@@ -130,6 +130,7 @@ declare global {
         getAppName: () => Promise<string>
         getSystemVersions: () => Promise<NodeJS.ProcessVersions>
         getPlatform: () => NodeJS.Platform
+        isWindows11: () => Promise<boolean>
 
         // 软件更新
         updaterCheckUpdate: () => Promise<{

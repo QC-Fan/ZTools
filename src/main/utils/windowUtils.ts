@@ -1,4 +1,37 @@
 import { BrowserWindow } from 'electron'
+import os from 'os'
+
+/**
+ * 检测是否为 Windows 11
+ * Windows 11 的版本号为 10.0.22000 或更高
+ */
+export function isWindows11(): boolean {
+  if (process.platform !== 'win32') {
+    return false
+  }
+
+  try {
+    const release = os.release()
+    const parts = release.split('.')
+    const major = parseInt(parts[0], 10)
+    const minor = parseInt(parts[1], 10)
+    const build = parseInt(parts[2], 10)
+
+    // Windows 11 的版本号是 10.0.22000 或更高
+    return major === 10 && minor === 0 && build >= 22000
+  } catch (error) {
+    console.error('检测 Windows 版本失败:', error)
+    return false
+  }
+}
+
+/**
+ * 获取 Windows 默认窗口材质
+ * Windows 11 默认使用亚克力材质，其他系统默认无材质
+ */
+export function getDefaultWindowMaterial(): 'mica' | 'acrylic' | 'none' {
+  return isWindows11() ? 'acrylic' : 'none'
+}
 
 /**
  * 应用窗口材质（Windows 11）

@@ -15,7 +15,7 @@ export class ClipboardAPI {
     // 获取剪贴板历史
     ipcMain.handle(
       'clipboard:get-history',
-      async (_event, page: number, pageSize: number, filter?: any) => {
+      async (_event, page: number, pageSize: number, filter?: string) => {
         try {
           return await clipboardManager.getHistory(page, pageSize, filter)
         } catch (error) {

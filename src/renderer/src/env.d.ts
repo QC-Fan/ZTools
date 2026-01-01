@@ -236,6 +236,7 @@ declare global {
       getAppVersion: () => Promise<string>
       getSystemVersions: () => Promise<NodeJS.ProcessVersions>
       getPlatform: () => string
+      isWindows11: () => Promise<boolean>
       // 上次匹配状态管理
       getLastMatchState: () => Promise<LastMatchState | null>
       restoreLastMatch: () => Promise<LastMatchState | null>

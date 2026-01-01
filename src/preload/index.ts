@@ -213,6 +213,8 @@ const api = {
   getSystemVersions: () => ipcRenderer.invoke('get-system-versions'),
   // 获取系统平台 (darwin, win32, linux)
   getPlatform: () => ipcRenderer.sendSync('get-platform'),
+  // 检测是否为 Windows 11
+  isWindows11: () => ipcRenderer.invoke('is-windows11'),
   // 上次匹配状态管理
   getLastMatchState: () => ipcRenderer.invoke('get-last-match-state'),
   restoreLastMatch: () => ipcRenderer.invoke('restore-last-match'),
@@ -399,6 +401,7 @@ declare global {
       getAppName: () => Promise<string>
       getSystemVersions: () => Promise<NodeJS.ProcessVersions>
       getPlatform: () => NodeJS.Platform
+      isWindows11: () => Promise<boolean>
       // 上次匹配状态管理
       getLastMatchState: () => Promise<any>
       restoreLastMatch: () => Promise<any>

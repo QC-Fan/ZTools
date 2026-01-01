@@ -489,17 +489,14 @@ class ClipboardManager {
   public async getHistory(
     page: number = 1,
     pageSize: number = 50,
-    filter?: { type?: ClipboardType; keyword?: string }
+    filter?: string
   ): Promise<{ items: any[]; total: number; page: number; pageSize: number }> {
     try {
       let allItems = await this.getAllItems()
 
-      // 过滤
-      if (filter?.type) {
-        allItems = allItems.filter((item) => item.type === filter.type)
-      }
-      if (filter?.keyword) {
-        const keyword = filter.keyword.toLowerCase()
+      // 过滤（只支持关键词搜索）
+      if (filter) {
+        const keyword = filter.toLowerCase()
         allItems = allItems.filter((item) => {
           // 搜索文本内容
           if (item.content?.toLowerCase().includes(keyword)) {
@@ -560,7 +557,7 @@ class ClipboardManager {
 
   // 搜索
   public async search(keyword: string): Promise<ClipboardItem[]> {
-    const result = await this.getHistory(1, 1000, { keyword })
+    const result = await this.getHistory(1, 1000, keyword)
     return result.items
   }
 

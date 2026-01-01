@@ -20,7 +20,7 @@ import clipboardManager from './clipboardManager'
 
 import { MAX_WINDOW_HEIGHT, WINDOW_INITIAL_HEIGHT, WINDOW_WIDTH } from '../common/constants'
 import detachedWindowManager from '../core/detachedWindowManager'
-import { applyWindowMaterial } from '../utils/windowUtils'
+import { applyWindowMaterial, getDefaultWindowMaterial } from '../utils/windowUtils'
 import pluginManager from './pluginManager'
 
 // 窗口材质类型
@@ -576,7 +576,8 @@ class WindowManager {
   private async applyWindowMaterialFromSettings(): Promise<void> {
     try {
       const settings = await lmdbInstance.promises.get('ZTOOLS/settings-general')
-      const material = (settings?.data?.windowMaterial as WindowMaterial) || 'none'
+      const material =
+        (settings?.data?.windowMaterial as WindowMaterial) || getDefaultWindowMaterial()
 
       console.log('从配置读取窗口材质:', material)
 
@@ -587,10 +588,11 @@ class WindowManager {
         this.broadcastWindowMaterial(material)
       }, 100)
     } catch (error) {
-      console.error('读取窗口材质配置失败，使用默认值 (mica):', error)
-      this.applyMaterial('mica')
+      console.error('读取窗口材质配置失败，使用默认值:', error)
+      const defaultMaterial = getDefaultWindowMaterial()
+      this.applyMaterial(defaultMaterial)
       setTimeout(() => {
-        this.broadcastWindowMaterial('none')
+        this.broadcastWindowMaterial(defaultMaterial)
       }, 100)
     }
   }
@@ -615,10 +617,10 @@ class WindowManager {
   public async getWindowMaterial(): Promise<WindowMaterial> {
     try {
       const settings = await lmdbInstance.promises.get('ZTOOLS/settings-general')
-      return (settings?.data?.windowMaterial as WindowMaterial) || 'none'
+      return (settings?.data?.windowMaterial as WindowMaterial) || getDefaultWindowMaterial()
     } catch (error) {
       console.error('获取窗口材质失败:', error)
-      return 'mica'
+      return getDefaultWindowMaterial()
     }
   }
 
