@@ -163,7 +163,7 @@ function applyAcrylicOverlay(): void {
 }
 
 // 初始化
-onMounted(() => {
+onMounted(async () => {
   // 检测操作系统并添加类名
   const userAgent = navigator.userAgent.toLowerCase()
   const osPlatform = navigator.platform.toLowerCase()
@@ -172,6 +172,21 @@ onMounted(() => {
     document.documentElement.classList.add('os-windows')
   } else if (osPlatform.includes('mac') || userAgent.includes('mac')) {
     document.documentElement.classList.add('os-mac')
+  }
+
+  // 从数据库加载亚克力透明度设置
+  try {
+    const settings = await window.ztools.dbGet('settings-general')
+    if (settings) {
+      acrylicLightOpacity.value = settings.acrylicLightOpacity ?? 78
+      acrylicDarkOpacity.value = settings.acrylicDarkOpacity ?? 50
+      console.log('标题栏加载亚克力透明度:', {
+        light: acrylicLightOpacity.value,
+        dark: acrylicDarkOpacity.value
+      })
+    }
+  } catch (error) {
+    console.error('加载亚克力透明度设置失败:', error)
   }
 
   // 初始化时获取当前窗口材质

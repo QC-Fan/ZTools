@@ -495,6 +495,21 @@ class DetachedWindowManager {
       }
     }
   }
+
+  /**
+   * 广播消息到所有分离窗口
+   */
+  public broadcastToAllWindows(channel: string, ...args: any[]): void {
+    for (const [windowId, info] of this.detachedWindowMap.entries()) {
+      try {
+        if (!info.window.isDestroyed()) {
+          info.window.webContents.send(channel, ...args)
+        }
+      } catch (error) {
+        console.error(`❌ 广播消息到分离窗口 ${windowId} 失败:`, error)
+      }
+    }
+  }
 }
 
 export default new DetachedWindowManager()

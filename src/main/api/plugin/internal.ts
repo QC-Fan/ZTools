@@ -1,4 +1,5 @@
 import { IpcMainInvokeEvent, ipcMain } from 'electron'
+import detachedWindowManager from '../../core/detachedWindowManager.js'
 import commandsAPI from '../renderer/commands.js'
 import pluginsAPI from '../renderer/plugins.js'
 import settingsAPI from '../renderer/settings.js'
@@ -336,6 +337,18 @@ export class InternalPluginAPI {
         }
         // 广播到主渲染进程
         this.mainWindow?.webContents.send('update-acrylic-opacity', { lightOpacity, darkOpacity })
+
+        // 广播到所有插件视图
+        const allPluginViews = this.pluginManager.getAllPluginViews()
+        for (const pluginViewInfo of allPluginViews) {
+          if (!pluginViewInfo.view.webContents.isDestroyed()) {
+            pluginViewInfo.view.webContents.send('update-acrylic-opacity', { lightOpacity, darkOpacity })
+          }
+        }
+
+        // 广播到所有分离窗口
+        detachedWindowManager.broadcastToAllWindows('update-acrylic-opacity', { lightOpacity, darkOpacity })
+
         return { success: true }
       }
     )
