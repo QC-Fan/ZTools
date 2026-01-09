@@ -12,6 +12,7 @@ const enterCallbacks = []
 const clipboardChangeCallbacks = []
 const subInputChangeCallbacks = []
 const pluginOutCallbacks = []
+const pluginDetachCallbacks = []
 const mainPushCallbacks = []
 const hotkeyRecordedCallbacks = []
 const windowMaterialChangeCallbacks = []
@@ -49,6 +50,13 @@ window.ztools = {
     console.log('插件请求onPluginOut')
     if (callback && typeof callback === 'function') {
       pluginOutCallbacks.push(callback)
+    }
+  },
+  // 插件分离事件
+  onPluginDetach: async (callback) => {
+    console.log('插件请求onPluginDetach')
+    if (callback && typeof callback === 'function') {
+      pluginDetachCallbacks.push(callback)
     }
   },
   // 监听主进程推送消息
@@ -455,6 +463,12 @@ electron.ipcRenderer.on('on-plugin-enter', (event, launchParam) => {
 electron.ipcRenderer.on('plugin-out', (event, isKill) => {
   console.log('插件退出事件:', isKill)
   pluginOutCallbacks.forEach((cb) => cb(isKill))
+})
+
+// 监听插件分离事件
+electron.ipcRenderer.on('plugin-detach', () => {
+  console.log('插件分离事件')
+  pluginDetachCallbacks.forEach((cb) => cb())
 })
 
 electron.ipcRenderer.on('clipboard-change', (event, item) => {

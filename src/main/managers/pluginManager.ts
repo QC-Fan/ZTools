@@ -933,6 +933,11 @@ class PluginManager {
       const windowWidth = storedSize?.width ?? 800
       const viewHeight = storedSize?.height ?? cached.height ?? defaultViewHeight
 
+      // 发送插件分离事件（在分离之前通知插件）
+      if (!cached.view.webContents.isDestroyed()) {
+        cached.view.webContents.send('plugin-detach')
+      }
+
       // 使用新的分离窗口管理器创建窗口（使用缓存的搜索框状态）
       const detachedWindow = detachedWindowManager.createDetachedWindow(
         this.currentPluginPath,
