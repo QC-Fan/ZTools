@@ -164,7 +164,8 @@ class PluginManager {
           allowRunningInsecureContent: true,
           webviewTag: true,
           preload: preloadPath,
-          session: sess
+          session: sess,
+          defaultFontSize: 14 // 设置默认字体大小
         }
       })
 
@@ -835,7 +836,8 @@ class PluginManager {
           allowRunningInsecureContent: true,
           webviewTag: true,
           preload: preloadPath,
-          session: sess
+          session: sess,
+          defaultFontSize: 14 // 设置默认字体大小
         }
       })
 
